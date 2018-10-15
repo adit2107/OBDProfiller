@@ -89,7 +89,7 @@ public class DBOpertion
                         + "trustServerCertificate=false;"
                         + "hostNameInCertificate=*.database.windows.net;"
                         + "loginTimeout=30;";
-                String fetchsql = "select userid from OBDuser;";
+                String fetchsql = "select DriverName from OBDdata2;";
                 ResultSet resultSet = null;
                 try (Connection connection = DriverManager.getConnection(connectionUrl))
                 {

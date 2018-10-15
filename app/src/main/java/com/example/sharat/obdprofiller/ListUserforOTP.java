@@ -20,31 +20,27 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
-public class ListUserforOTP extends AppCompatActivity
-{
-   // public static ArrayList<String> list = new ArrayList<String>();
+public class ListUserforOTP extends AppCompatActivity {
+    // public static ArrayList<String> list = new ArrayList<String>();
 
     List userlist;
     DBOpertion listobject = new DBOpertion();
+    public static String ph;
+    public static String drivername;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_userfor_otp);
+        final String[] driverinfo = new String[5];
         userlist = listobject.getuserlist();
-        String[] userslist1 = {"Driver1", "Driver2", "Driver3", "Driver4"};
-        ListView lv = (ListView)findViewById(R.id.otplv);
+        ListView lv = (ListView) findViewById(R.id.otplv);
         Log.d("OTPList", "Users list " + userlist);
-        Object[] objectArray = userlist.toArray();
-        String[] stringArray = Arrays.copyOf(objectArray, objectArray.length, String[].class);
-
-//        int i=0;
-//        while(i<userlist.size())
-//        {
-//
-//        }
 
         ArrayAdapter<String> test = new ArrayAdapter<String>(this, R.layout.driverslist, R.id.driversview, userlist);
         lv.setAdapter(test);
@@ -53,20 +49,75 @@ public class ListUserforOTP extends AppCompatActivity
                                     int position, long id) {
 
                 // fetch from SQL
-                JSONObject driversjson = new JSONObject();
-                try {
-                    driversjson.put("Phone", "919482871995");
-                    driversjson.put("Name", "Adit");
-                } catch (Exception e){
-                    Log.d("DriverJson", "Could not add json" + e);
-                }
+                drivername = parent.getItemAtPosition(position).toString();
+                Log.d("OTPList", "Name clicked" + parent.getItemAtPosition(position));
+                driverinfo[0] = drivername;
+                String driverph = getphone(drivername);
+                Log.d("OTPList", "Driver phone:" + driverph);
+                driverinfo[1] = driverph;
 
                 Intent i = new Intent(getApplicationContext(), otpactivity1.class);
-                i.putExtra("driverdetails", driversjson.toString());
+                i.putExtra("driverdetails", driverinfo);
                 startActivity(i);
 
             }
         });
+
+    }
+
+    public String getphone(final String drivername) {
+        ExecutorService executorService1 = Executors.newSingleThreadExecutor();
+        Future<List> future = executorService1.submit(new Callable(){
+            public Object call() throws Exception {
+                System.out.println("Asynchronous Callable");
+                Log.w("DBOperation", "in thread");
+                String connectionUrl = "jdbc:jtds:sqlserver://boschsql.database.windows.net:1433/boschdb;"
+                        + "database=boschdb;"
+                        + "user=bosch;"
+                        + "password=Asd12345****;"
+                        + "encrypt=false;"
+                        + "trustServerCertificate=false;"
+                        + "hostNameInCertificate=*.database.windows.net;"
+                        + "loginTimeout=30;";
+                String fetchsql = "select DriverPhone from OBDdata2 where DriverName = '"+drivername+"';";
+
+                ResultSet resultSet = null;
+                try (Connection connection = DriverManager.getConnection(connectionUrl))
+                {
+                    java.sql.Statement statement;
+                    java.sql.ResultSet res;
+                    Log.w("DBOperation", "Trying to execute");
+                    statement = connection.createStatement();
+                    res = statement.executeQuery(fetchsql);
+
+                    while (res.next())
+                    {
+                        ph = res.getString(1);
+                        System.out.println("Generated: " + res.getString(1));
+                        Log.d("OTPList", "phone" + ph);
+
+                    }
+
+                    connection.close();
+                }
+                catch (SQLException e)
+                {
+                    e.printStackTrace();
+                }
+                Log.d("OTPList", "Got list within call: " + ph);
+
+                return ph;
+            }
+        });
+
+        try {
+            System.out.println("future.get() = " + future.get());
+            Log.d("OTPList", "Got list above: " + future.get());
+        }catch (Exception e){
+            Log.d("OTPList", "Could not retrieve future" + e );
+        }
+        Log.d("OTPList", "Phone value" + ph);
+        return ph ;
 
     }
 }
