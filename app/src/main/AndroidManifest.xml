@@ -19,7 +19,9 @@
             </intent-filter>
         </activity>
         <activity android:name=".Main2Activity" />
-        <activity android:name=".ListUserforOTP"></activity>
+        <activity android:name=".ListUserforOTP" android:exported="true" />
+        <activity android:name=".otpactivity1">
+        </activity>
     </application>
 
 </manifest>

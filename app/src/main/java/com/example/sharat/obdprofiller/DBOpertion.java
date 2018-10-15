@@ -15,11 +15,19 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.RunnableFuture;
 
 import static java.lang.Thread.sleep;
 
 public class DBOpertion
 {
+
     public static String type;
     public static ArrayList<String> list = new ArrayList<String>();
     String DBOpertion_getID(final String uid, final String pass)
@@ -66,16 +74,12 @@ public class DBOpertion
         return type;
     }
 
-//    public List getuserlist()
-    List getuserlist()
+    public List getuserlist()
     {
-       // List list;
-
-        Thread thread = new Thread()
-        {
-            @Override
-            public void run()
-            {
+        ExecutorService executorService1 = Executors.newSingleThreadExecutor();
+        Future<List> future = executorService1.submit(new Callable(){
+            public Object call() throws Exception {
+                System.out.println("Asynchronous Callable");
                 Log.w("DBOperation", "in thread");
                 String connectionUrl = "jdbc:jtds:sqlserver://boschsql.database.windows.net:1433/boschdb;"
                         + "database=boschdb;"
@@ -99,6 +103,7 @@ public class DBOpertion
                     {
                         list.add(res.getString(1));
                         System.out.println("Generated: " + res.getString(1));
+                        Log.d("DBOperation", "Adding list" + list);
 
                     }
                     connection.close();
@@ -107,9 +112,19 @@ public class DBOpertion
                 {
                     e.printStackTrace();
                 }
+                Log.d("DBOperation", "Got list within call: " + list);
+
+                return list;
             }
-        };
-        thread.start();
-        return list;
+        });
+
+        try {
+            System.out.println("future.get() = " + future.get());
+            Log.d("DBOperation", "Got list above: " + future.get());
+        }catch (Exception e){
+            Log.d("DBOperation", "Could not retrieve future" + e );
+        }
+        Log.d("DBOperation", "List value" + list);
+        return list ;
     }
 }
