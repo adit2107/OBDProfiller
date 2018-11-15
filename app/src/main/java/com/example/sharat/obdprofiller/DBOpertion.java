@@ -1,5 +1,6 @@
 package com.example.sharat.obdprofiller;
 
+
 /**
  * Created by Sharat on 11-10-2018.
  */
@@ -27,10 +28,20 @@ import static java.lang.Thread.sleep;
 
 public class DBOpertion
 {
+    String connectionUrl = "jdbc:jtds:sqlserver://boschsql.database.windows.net:1433/boschdb;"
+            + "database=boschdb;"
+            + "user=bosch;"
+            + "password=Asd12345****;"
+            + "encrypt=false;"
+            + "trustServerCertificate=false;"
+            + "hostNameInCertificate=*.database.windows.net;"
+            + "loginTimeout=30;";
 
     public static String type;
+
     public static ArrayList<String> list = new ArrayList<String>();
-    String DBOpertion_getID(final String uid, final String pass)
+
+    public String DBOpertion_getID(final String uid, final String pass)
     {
         Log.w("DBOperation", "Constructing DB Object for | " + uid + pass);
         Thread thread = new Thread()
@@ -39,14 +50,7 @@ public class DBOpertion
             public void run()
             {
                     Log.w("DBOperation", "in thread");
-                    String connectionUrl = "jdbc:jtds:sqlserver://boschsql.database.windows.net:1433/boschdb;"
-                                            + "database=boschdb;"
-                                            + "user=bosch;"
-                                            + "password=Asd12345****;"
-                                            + "encrypt=false;"
-                                            + "trustServerCertificate=false;"
-                                            + "hostNameInCertificate=*.database.windows.net;"
-                                            + "loginTimeout=30;";
+
                     String fetchsql = "select logintype from OBDuser where userid = '"+uid+"' and pass = '" +pass+"';";
                     ResultSet resultSet = null;
                     try (Connection connection = DriverManager.getConnection(connectionUrl))
@@ -77,24 +81,16 @@ public class DBOpertion
     public List getuserlist()
     {
         ExecutorService executorService1 = Executors.newSingleThreadExecutor();
-        Future<List> future = executorService1.submit(new Callable(){
+        Future future = executorService1.submit(new Callable(){
             public Object call() throws Exception {
                 System.out.println("Asynchronous Callable");
                 Log.w("DBOperation", "in thread");
-                String connectionUrl = "jdbc:jtds:sqlserver://boschsql.database.windows.net:1433/boschdb;"
-                        + "database=boschdb;"
-                        + "user=bosch;"
-                        + "password=Asd12345****;"
-                        + "encrypt=false;"
-                        + "trustServerCertificate=false;"
-                        + "hostNameInCertificate=*.database.windows.net;"
-                        + "loginTimeout=30;";
-                String fetchsql = "select DriverName from OBDdata2;";
+                String fetchsql = "select userid from OBDuser where logintype = 'user';";
                 ResultSet resultSet = null;
                 try (Connection connection = DriverManager.getConnection(connectionUrl))
                 {
-                    java.sql.Statement statement;
-                    java.sql.ResultSet res;
+                    Statement statement;
+                    ResultSet res;
                     Log.w("DBOperation", "Trying to execute");
                     statement = connection.createStatement();
                     res = statement.executeQuery(fetchsql);
@@ -127,4 +123,81 @@ public class DBOpertion
         Log.d("DBOperation", "List value" + list);
         return list ;
     }
+
+    public void setotp(final String userid, final String phone, final String otp, final String currtime, final int starth, final int startm, final int endh, final int endm)
+    {
+        ExecutorService executorService1 = Executors.newSingleThreadExecutor();
+        Future future = executorService1.submit(new Callable()
+        {
+            public Object call() throws Exception {
+                System.out.println("Asynchronous Callable");
+                Log.w("DBOperation", "in thread");
+                String fetchsql = "insert into otps (userid, phone,otp,currtime, starth, startm, endh, endm, active, extraflag) values ('" + userid + "','" + phone + "','" + otp + "','" + currtime + "', '" + starth + "','" + startm + "', '" + endh + "', '" + endm + "', '" + 1 + "', '" + 0 + "');";
+                //   ResultSet resultSet = null;
+                try (Connection connection = DriverManager.getConnection(connectionUrl)) {
+                    Statement statement;
+                    ResultSet res;
+                    Log.w("DBOperation", "Trying to execute");
+                    statement = connection.createStatement();
+                    res = statement.executeQuery(fetchsql);
+
+               /*     while (res.next())
+                    {
+                        list.add(res.getString(1));
+                        System.out.println("Generated: " + res.getString(1));
+                        Log.d("DBOperation", "Adding list" + list);
+
+                    }*/
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+                Log.d("DBOperation", "Got list within call: " + list);
+
+                return 0;
+            }
+        });
+
+        try
+        {
+            System.out.println("future.get() = " + future.get());
+            Log.d("DBOperation", "Got list above: " + future.get());
+        }
+        catch (Exception e)
+        {
+            Log.d("DBOperation", "Could not retrieve future" + e );
+        }
+        Log.d("DBOperation", "List value");
+
+    }
+
+    public void setmaxspeed(final String maxspeed)
+    {
+        ExecutorService executorService1 = Executors.newSingleThreadExecutor();
+        Future future = executorService1.submit(new Callable()
+        {
+            public Object call() throws Exception
+            {
+                String updatesql = "update dbo.thresh set thresh = '"+maxspeed+"' where id = 'speed';";
+                //   ResultSet resultSet = null;
+                try (Connection connection = DriverManager.getConnection(connectionUrl))
+                {
+                    Statement statement;
+                    ResultSet res;
+                    Log.w("DBOperation", "Trying to execute");
+                    statement = connection.createStatement();
+                    statement.executeUpdate(updatesql);
+                    connection.close();
+                }
+                catch (SQLException e)
+                {
+                    e.printStackTrace();
+                }
+                Log.d("DBOperation", "Got list within call: " + list);
+
+                return 0;
+            }
+        });
+    }
+
 }

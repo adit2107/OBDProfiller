@@ -79,7 +79,7 @@ public class ListUserforOTP extends AppCompatActivity {
                         + "trustServerCertificate=false;"
                         + "hostNameInCertificate=*.database.windows.net;"
                         + "loginTimeout=30;";
-                String fetchsql = "select DriverPhone from OBDdata2 where DriverName = '"+drivername+"';";
+                String fetchsql = "select phone from OBDuser where userid = '"+drivername+"';";
 
                 ResultSet resultSet = null;
                 try (Connection connection = DriverManager.getConnection(connectionUrl))
